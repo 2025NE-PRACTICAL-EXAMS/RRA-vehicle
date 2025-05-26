@@ -23,23 +23,24 @@ public class OwnerService {
     private final OwnerMapper ownerMapper;
 
     public OwnerResponseDTO createOwner(RegisterOwnerRequestDTO ownerRequest) {
+        log.info("Creating new owner with National ID: {} and Phone: {}", ownerRequest.nationalId(), ownerRequest.phoneNumber());
+
         if (ownerRepository.existsByNationalIdOrPhoneNumber(ownerRequest.nationalId(), ownerRequest.phoneNumber())) {
+            log.warn("Owner already exists with National ID: {} or Phone: {}", ownerRequest.nationalId(), ownerRequest.phoneNumber());
             throw new BadRequestException("Owner with this National ID or Phone Number already exists");
         }
 
-        // Map DTO to Entity
         Owner newOwner = ownerMapper.toEntity(ownerRequest);
-
-        // Save the new owner
         ownerRepository.save(newOwner);
+        log.info("Owner created with ID: {}", newOwner.getId());
 
-        // Map saved owner to response DTO
         return ownerMapper.toResponse(newOwner);
     }
 
-//     Search owners by National ID, or Phone
     public List<OwnerResponseDTO> searchOwners(String nationalId, String phoneNumber) {
+        log.info("Searching owners by National ID: {} or Phone: {}", nationalId, phoneNumber);
         List<Owner> owners;
+
         if (nationalId != null) {
             owners = ownerRepository.findByNationalId(nationalId);
         } else if (phoneNumber != null) {
@@ -47,36 +48,47 @@ public class OwnerService {
         } else {
             owners = ownerRepository.findAll();
         }
-        return owners.stream().map(owner ->
-                new OwnerResponseDTO(
-                        owner.getId(),
-                        owner.getFullNames(),
-                        owner.getNationalId(),
-                        owner.getPhoneNumber(),
-                        owner.getAddress())).collect(Collectors.toList());
-    }
 
-
-    // Display plate numbers associated with a given owner
-    public List<PlateNumberResponseDTO> getPlateNumbersByOwner(UUID ownerId) {
-        Owner owner = ownerRepository.findById(ownerId).orElseThrow(() -> new BadRequestException("Owner not found"));
-        List<Vehicle> plateNumbers = owner.getVehicles();
-        return plateNumbers.stream()
-                .map(plateNumber -> new PlateNumberResponseDTO(plateNumber.getPlateNumber().getPlateNumber()))
-                .collect(Collectors.toList());
-    }
-
-    public List<OwnerResponseDTO> getAllOwners() {
-        List<Owner> owners = ownerRepository.findAll();
+        log.info("Found {} owners", owners.size());
         return owners.stream()
                 .map(owner -> new OwnerResponseDTO(
                         owner.getId(),
                         owner.getFullNames(),
                         owner.getNationalId(),
                         owner.getPhoneNumber(),
-                        owner.getAddress()
-                ))
+                        owner.getAddress()))
                 .collect(Collectors.toList());
     }
 
+    public List<PlateNumberResponseDTO> getPlateNumbersByOwner(UUID ownerId) {
+        log.info("Fetching plate numbers for owner ID: {}", ownerId);
+
+        Owner owner = ownerRepository.findById(ownerId)
+                .orElseThrow(() -> {
+                    log.warn("Owner not found with ID: {}", ownerId);
+                    return new BadRequestException("Owner not found");
+                });
+
+        List<Vehicle> plateNumbers = owner.getVehicles();
+        log.info("Owner has {} vehicles", plateNumbers.size());
+
+        return plateNumbers.stream()
+                .map(vehicle -> new PlateNumberResponseDTO(vehicle.getPlateNumber().getPlateNumber()))
+                .collect(Collectors.toList());
+    }
+
+    public List<OwnerResponseDTO> getAllOwners() {
+        log.info("Fetching all owners");
+        List<Owner> owners = ownerRepository.findAll();
+        log.info("Total owners found: {}", owners.size());
+
+        return owners.stream()
+                .map(owner -> new OwnerResponseDTO(
+                        owner.getId(),
+                        owner.getFullNames(),
+                        owner.getNationalId(),
+                        owner.getPhoneNumber(),
+                        owner.getAddress()))
+                .collect(Collectors.toList());
+    }
 }

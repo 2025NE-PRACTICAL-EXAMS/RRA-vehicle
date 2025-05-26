@@ -1,67 +1,54 @@
 package com.naome.template.auth;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.TimeUnit;
+import java.time.LocalDateTime;
+import java.util.Random;
 
-@AllArgsConstructor
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class OtpService {
-    private final RedisTemplate<String, String> redisTemplate;
+    private final OtpRepository otpRepository;
 
-    private final ValueOperations<String, String> valueOperations;
+    public String generateOtp(String email, OtpType type) {
+        // Remove any existing OTP for the same email and type
+        otpRepository.deleteByEmailAndType(email, type);
 
-    String generateOtp(String userEmail, OtpType otpType){
-        var otp = generateOtp();
-        String key = generateKey(userEmail, otp, otpType);
-        storeOtp(key, otp);
-        return otp;
+        String code = generate6DigitCode();
+        Otp otp = Otp.builder()
+                .email(email)
+                .code(code)
+                .type(type)
+                .expiresAt(LocalDateTime.now().plusMinutes(10))
+                .build();
+
+        otpRepository.save(otp);
+        log.info(" OTP generated and stored for {} [{}]", email, type);
+        return code;
     }
 
-    boolean verifyOtp(String userEmail, String otp, OtpType otpType){
-        String key = generateKey(userEmail, otp, otpType);
-        if (hasOtp(key)){
-            String storedOtp = getOtp(key);
-            if (storedOtp.equals(otp)){
-                deleteOtp(key);
-                return true;
-            }
-        }
-        return false;
+    public boolean verifyOtp(String email, String code, OtpType type) {
+        return otpRepository.findByEmailAndCodeAndType(email, code, type)
+                .filter(otp -> otp.getExpiresAt().isAfter(LocalDateTime.now()))
+                .map(otp -> {
+                    otpRepository.delete(otp); // Delete after successful verification
+                    return true;
+                })
+                .orElse(false);
     }
 
-    private String getOtp(String key){
-        return valueOperations.get(key);
+    private String generate6DigitCode() {
+        return String.valueOf(100_000 + new Random().nextInt(900_000));
     }
 
-    private void deleteOtp(String key){
-        redisTemplate.delete(key);
-    }
-
-    private boolean hasOtp(String key){
-        return redisTemplate.hasKey(key);
-    }
-
-    private String generateKey(String userEmail,String otp, OtpType otpType){
-        return String.format("%s:%s:%s",otpType.toString(), userEmail, otp);
-    }
-
-    private void storeOtp(String key, String otp){
-        valueOperations.set(key, otp, 10, TimeUnit.MINUTES);
-        log.info("Storing otp is going successfully");
-    }
-
-    private String generateOtp(){
-        StringBuilder otp = new StringBuilder();
-        for (int i = 0; i < 6; i++) {
-            int digit = (int) (Math.random() * 10);
-            otp.append(digit);
-        }
-        return otp.toString();
+    // Clean up expired OTPs every hour
+    @Scheduled(cron = "0 0 * * * *") // Runs every hour
+    public void deleteExpiredOtps() {
+        int count = otpRepository.deleteAllByExpiresAtBefore(LocalDateTime.now());
+        log.info("🧹 Deleted {} expired OTPs", count);
     }
 }

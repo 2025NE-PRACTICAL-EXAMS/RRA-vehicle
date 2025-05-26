@@ -5,7 +5,6 @@ import com.naome.template.history.HistoryRepository;
 import com.naome.template.history.VehicleOwnershipHistory;
 import com.naome.template.owner.Owner;
 import com.naome.template.owner.OwnerRepository;
-
 import com.naome.template.platenumbers.PlateNumber;
 import com.naome.template.platenumbers.PlateRepository;
 import com.naome.template.platenumbers.PlateService;
@@ -52,16 +51,22 @@ public class VehicleService {
         // Update plate number assignment after vehicle is saved
         plateService.assignPlateToVehicle(plate.getId(), vehicle);
 
+        log.info("Vehicle registered: Vehicle ID = {}, Owner ID = {}, Plate = {}",
+                vehicle.getId(), owner.getId(), plate.getPlateNumber());
+
         return vehicleMapper.toResponse(vehicle);
     }
 
     public VehicleResponseDTO getVehicleById(UUID id) {
         var vehicle = vehicleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found"));
+
+        log.info("Fetched vehicle by ID: {}", id);
         return vehicleMapper.toResponse(vehicle);
     }
 
     public List<VehicleResponseDTO> getAllVehicles() {
+        log.info("Fetching all vehicles");
         return vehicleRepository.findAll().stream()
                 .map(vehicleMapper::toResponse)
                 .collect(Collectors.toList());
@@ -90,7 +95,7 @@ public class VehicleService {
         // 3. Assign to new owner and vehicle
         newPlate.setStatus(PlateStatus.IN_USE);
         newPlate.setVehicle(vehicle);
-        newPlate.setOwner(newOwner); // 🔥 Set the new owner
+        newPlate.setOwner(newOwner);
         plateRepository.save(newPlate);
 
         // 4. Save ownership history
@@ -103,13 +108,24 @@ public class VehicleService {
         history.setOldPlateNumber(currentPlate.getPlateNumber());
         history.setNewPlateNumber(newPlate.getPlateNumber());
         historyRepository.save(history);
+
         // 5. Update vehicle
         vehicle.setCurrentOwner(newOwner);
         vehicle.setPlateNumber(newPlate);
         vehicleRepository.save(vehicle);
-    }
-    public List<Vehicle> searchByNationalId(String nationalId) {
-        return vehicleRepository.findByCurrentOwnerNationalId(nationalId);
+
+        log.info("Vehicle transferred: Vehicle ID = {}, From Owner ID = {}, To Owner ID = {}, " +
+                        "Old Plate = {}, New Plate = {}, Price = {}",
+                vehicle.getId(),
+                history.getFromOwner().getId(),
+                history.getToOwner().getId(),
+                history.getOldPlateNumber(),
+                history.getNewPlateNumber(),
+                request.purchasePrice());
     }
 
+    public List<Vehicle> searchByNationalId(String nationalId) {
+        log.info("Searching for vehicles by national ID: {}", nationalId);
+        return vehicleRepository.findByCurrentOwnerNationalId(nationalId);
+    }
 }

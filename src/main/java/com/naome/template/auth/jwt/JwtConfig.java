@@ -1,4 +1,4 @@
-package com.naome.template.auth;
+package com.naome.template.auth.jwt;
 
 import io.jsonwebtoken.security.Keys;
 import lombok.Data;

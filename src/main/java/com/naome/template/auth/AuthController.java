@@ -1,6 +1,8 @@
 package com.naome.template.auth;
 
 import com.naome.template.auth.dtos.*;
+import com.naome.template.auth.otp.OtpService;
+import com.naome.template.auth.otp.OtpType;
 import com.naome.template.email.EmailService;
 import com.naome.template.commons.exceptions.BadRequestException;
 import com.naome.template.user.UserService;

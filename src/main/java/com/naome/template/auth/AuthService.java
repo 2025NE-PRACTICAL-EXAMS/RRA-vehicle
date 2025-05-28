@@ -2,6 +2,7 @@ package com.naome.template.auth;
 
 import com.naome.template.auth.dtos.LoginRequestDTO;
 import com.naome.template.auth.dtos.LoginResponseDTO;
+import com.naome.template.auth.jwt.JwtService;
 import com.naome.template.user.User;
 import com.naome.template.user.UserRepository;
 import jakarta.servlet.http.Cookie;

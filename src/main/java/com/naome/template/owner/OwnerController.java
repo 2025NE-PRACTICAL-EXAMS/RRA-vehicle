@@ -55,4 +55,22 @@ public class OwnerController {
         return new ResponseEntity<>(owners, HttpStatus.OK);
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<String> deleteOwner(@PathVariable UUID id) {
+        String response = ownerService.deleteOwnerById(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<OwnerResponseDTO> updateOwner(
+            @PathVariable UUID id,
+            @RequestBody RegisterOwnerRequestDTO updateRequest
+    ) {
+        OwnerResponseDTO updatedOwner = ownerService.updateOwner(id, updateRequest);
+        return ResponseEntity.ok(updatedOwner);
+    }
+
+
 }

@@ -1,6 +1,7 @@
 package com.naome.template.owner;
 
 import com.naome.template.commons.exceptions.BadRequestException;
+import com.naome.template.commons.exceptions.ResourceNotFoundException;
 import com.naome.template.owner.dto.OwnerResponseDTO;
 import com.naome.template.owner.dto.PlateNumberResponseDTO;
 import com.naome.template.owner.dto.RegisterOwnerRequestDTO;
@@ -91,4 +92,40 @@ public class OwnerService {
                         owner.getAddress()))
                 .collect(Collectors.toList());
     }
+
+    public String deleteOwnerById(UUID ownerId){
+         Owner owner = ownerRepository.findById(ownerId)
+                 .orElseThrow(() -> new ResourceNotFoundException("Owner not found"));
+         if(owner.getVehicles() != null){
+             throw new BadRequestException("Can not delete Owner that has vehicles");
+         }
+
+         ownerRepository.delete(owner);
+         String name = owner.getFullNames();
+         return name + " has been deleted successfully";
+
+    }
+
+    public OwnerResponseDTO updateOwner(UUID ownerId, RegisterOwnerRequestDTO updateRequest) {
+        log.info("Updating owner with ID: {}", ownerId);
+
+        Owner existingOwner = ownerRepository.findById(ownerId)
+                .orElseThrow(() -> {
+                    log.warn("Owner not found with ID: {}", ownerId);
+                    return new ResourceNotFoundException("Owner not found");
+                });
+
+        // Optional: Validation to prevent national ID or phone duplication
+        if (!existingOwner.getNationalId().equals(updateRequest.nationalId())
+        && !existingOwner.getPhoneNumber().equals(updateRequest.phoneNumber())) {
+            throw new BadRequestException("Another owner with this National ID or phonenumber already exists");
+        }
+
+        ownerMapper.updateOwnerFromDto(updateRequest, existingOwner);
+        ownerRepository.save(existingOwner);
+
+        log.info("Owner with ID: {} updated successfully", ownerId);
+        return ownerMapper.toResponse(existingOwner);
+    }
+
 }

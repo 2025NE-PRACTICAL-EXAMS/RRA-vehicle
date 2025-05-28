@@ -1,4 +1,4 @@
-package com.naome.template.auth;
+package com.naome.template.auth.otp;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

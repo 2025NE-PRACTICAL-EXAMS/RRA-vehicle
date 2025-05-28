@@ -1,4 +1,4 @@
-package com.naome.template.auth;
+package com.naome.template.auth.otp;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

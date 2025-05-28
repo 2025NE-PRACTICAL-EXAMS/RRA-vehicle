@@ -1,4 +1,4 @@
-package com.naome.template.auth;
+package com.naome.template.auth.jwt;
 
 import com.naome.template.user.Role;
 import io.jsonwebtoken.Claims;

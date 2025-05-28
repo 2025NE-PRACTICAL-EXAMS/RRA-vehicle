@@ -56,5 +56,52 @@ public class PlateService {
 
         plateRepository.save(plate);
     }
+
+    public String deletePlateById(UUID plateId) {
+        PlateNumber plate = plateRepository.findById(plateId)
+                .orElseThrow(() -> new ResourceNotFoundException("Plate not found"));
+
+        if (plate.getVehicle() != null) {
+            throw new IllegalStateException("Cannot delete plate that is assigned to a vehicle.");
+        }
+
+        plateRepository.delete(plate);
+
+        return plate.getPlateNumber() + "Plate has been deleted";
+    }
+
+
+    public String deleteAllPlatesWithNoVehicles() {
+        List<PlateNumber> plates = plateRepository.findAll();
+
+        List<PlateNumber> unassignedPlates = plates.stream()
+                .filter(plate -> plate.getVehicle() == null)
+                .toList();
+
+        if (unassignedPlates.isEmpty()) {
+            return "No unassigned plates to delete.";
+        }
+
+        plateRepository.deleteAll(unassignedPlates);
+        return unassignedPlates.size() + " unassigned plates deleted successfully.";
+    }
+
+
+    @Transactional
+    public PlateResponseDTO updatePlateNumber(UUID plateId, RegisterPlateRequest request) {
+        boolean exists = plateRepository.existsById(plateId);
+        if (!exists) {
+            throw new ResourceNotFoundException("Plate not found");
+        }
+
+        PlateNumber plate = plateRepository.findById(plateId).get(); // safe to use get() here
+        plateMapper.updateEntityFromDto(request, plate);
+
+        PlateNumber updatedPlate = plateRepository.save(plate);
+        return plateMapper.toResponse(updatedPlate);
+    }
+
+
+
+
 }
- 

@@ -1,4 +1,4 @@
-package com.naome.template.auth;
+package com.naome.template.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;

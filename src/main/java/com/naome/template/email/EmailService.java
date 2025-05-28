@@ -1,7 +1,7 @@
 package com.naome.template.email;
 
 
-import com.naome.template.auth.OtpType;
+import com.naome.template.auth.otp.OtpType;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.AllArgsConstructor;

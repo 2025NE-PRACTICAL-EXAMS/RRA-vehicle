@@ -1,5 +1,6 @@
-package com.naome.template.auth;
+package com.naome.template.config;
 
+import com.naome.template.auth.jwt.JwtAuthenticationFilter;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +28,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 public class SecurityConfig {
     private final UserDetailsService userDetailsService;
-    private final  JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final SecurityExceptionHandler securityExceptionHandler;
     private static final String[] AUTH_WHITELIST = {
             "/swagger-resources/**",

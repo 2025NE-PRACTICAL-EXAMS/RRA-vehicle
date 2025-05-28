@@ -1,4 +1,4 @@
-package com.naome.template.auth;
+package com.naome.template.auth.jwt;
 
 import com.naome.template.auth.exceptions.InvalidJwtException;
 import com.naome.template.user.User;
@@ -16,11 +16,11 @@ import java.util.Date;
 public class JwtService {
     private final JwtConfig config;
 
-    Jwt generateAccessToken(User user){
+    public Jwt generateAccessToken(User user){
         return generateToken(user, config.getAccessTokenExpiration());
     }
 
-    Jwt generateRefreshToken(User user){
+    public Jwt generateRefreshToken(User user){
         return generateToken(user, config.getRefreshTokenExpiration());
     }
 
@@ -33,10 +33,10 @@ public class JwtService {
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 1000 * tokenExpiration))
                 .build();
-        return new Jwt(claims, config.getSecretKey());
+        return new com.naome.template.auth.jwt.Jwt(claims, config.getSecretKey());
     }
 
-    Jwt parseToken(String token) {
+    public Jwt parseToken(String token) {
         try {
             var claims = getClaims(token);
             return new Jwt(claims, config.getSecretKey());

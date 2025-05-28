@@ -5,6 +5,7 @@ import com.naome.template.platenumbers.dto.PlateResponseDTO;
 import com.naome.template.platenumbers.dto.RegisterPlateRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface PlateMapper {
@@ -13,4 +14,6 @@ public interface PlateMapper {
 
     @Mapping(target = "issuedDate", source = "issueDate")
     PlateNumber toEntity(RegisterPlateRequest request);
+    void updateEntityFromDto(RegisterPlateRequest request, @MappingTarget PlateNumber plate);
+
 }

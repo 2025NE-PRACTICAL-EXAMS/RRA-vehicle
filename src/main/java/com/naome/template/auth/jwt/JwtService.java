@@ -13,7 +13,8 @@ import java.util.Date;
 @Service
 @AllArgsConstructor
 @Slf4j
-public class JwtService {
+public class
+JwtService {
     private final JwtConfig config;
 
     public Jwt generateAccessToken(User user){
